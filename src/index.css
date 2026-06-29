@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* Theme tokens Tailwind v4 */
+@theme {
+  --color-primary: #6965db;
+  --color-primary-hover: #5b57d1;
+
+  --color-background: #f8f9fa;
+  --color-surface: #ffffff;
+
+  --color-border: #d9d9d9;
+  --color-muted: #6b7280;
+
+  --color-foreground: #1f2937;
+}
+
+/* Reset mínimo (NO agresivo) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Root */
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Body */
+body {
+  font-family: Inter, system-ui, sans-serif;
+  background-color: #f8f9fa;
+  color: #111827;
+  line-height: 1.5;
+}
+
+/* Mejor render */
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+/* Quitamos outline feo */
+button {
+  cursor: pointer;
+}
+
+/* Scrollbar limpia */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 20px;
+}
