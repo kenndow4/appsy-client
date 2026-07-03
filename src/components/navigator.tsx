@@ -3,6 +3,7 @@ import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognitio
 import { useState, useRef, useEffect } from "react";
 import { DialogTranscription } from "@/components/dialogTranscription";
 import { useAuth } from "@/provider/auth.provider";
+import { useBoard } from "@/provider/board.provider";
 
 const Skeleton = ({ className }: { className?: string }) => (
   <div className={`animate-pulse rounded-md bg-slate-100 ${className}`} />
@@ -35,6 +36,7 @@ export const Nav = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, userLoading, logout } = useAuth();
+  const {board} = useBoard();
 
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
@@ -76,12 +78,11 @@ export const Nav = () => {
             <div className="flex h-5 w-5 items-center justify-center rounded bg-violet-600 text-xs text-white">
               <i className="ti ti-pencil" aria-hidden="true" />
             </div>
-            <span className="text-xs font-bold text-violet-600">Sketra</span>
-            <span className="text-xs text-slate-400">canvas</span>
+            <span className="text-xs font-bold text-violet-600">{board?.title || "Untitle"}</span>
           </div>
         </div>
 
-        {/* Hablar con IA */}
+        {/* Hablar con IA
         <button
           onClick={() => setDialogOpen(true)}
           className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 transition-all hover:border-violet-200 hover:bg-violet-50"
@@ -91,92 +92,13 @@ export const Nav = () => {
             <Mic size={13} strokeWidth={2.5} />
           </div>
           <span className="text-xs font-semibold text-slate-600">Hablar con IA</span>
-        </button>
+        </button> */}
 
         {/* User */}
-        <div className="relative" ref={menuRef}>
-
-          {userLoading ? (
-            <div className="flex items-center gap-2 px-1">
-              <Skeleton className="h-7 w-7 rounded-full" />
-              <Skeleton className="h-2.5 w-20 rounded" />
-              <Skeleton className="h-2.5 w-2.5 rounded" />
-            </div>
-          ) : (
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className={`flex items-center gap-2 rounded-xl border px-2.5 py-1.5 transition-all
-                ${menuOpen
-                  ? "border-violet-300 bg-violet-50"
-                  : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                }`}
-              style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
-            >
-              <UserAvatar src={user?.avatar} name={user?.name} />
-              <span className="text-[12px] font-semibold text-slate-700">
-                {user?.name ?? "Usuario"}
-              </span>
-              <ChevronDown
-                size={12}
-                strokeWidth={2.5}
-                className={`text-slate-400 transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-          )}
-
-          {/* Dropdown */}
-          {menuOpen && !userLoading && (
-            <div
-              className="absolute right-0 top-[calc(100%+10px)] z-50 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white"
-              style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.05)" }}
-            >
-              {/* Header del menu */}
-              <div className="border-b border-slate-100 bg-slate-50 px-4 py-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <UserAvatar src={user?.avatar} name={user?.name} />
-                    <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-bold text-slate-800">
-                      {user?.name ?? "Usuario"}
-                    </p>
-                    <p className="truncate text-[11px] text-slate-400">
-                      {user?.email ?? ""}
-                    </p>
-                  </div>
-                  {/* Badge plan */}
-                  <span className="ml-auto shrink-0 rounded-md border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-violet-600">
-                    Free
-                  </span>
-                </div>
-              </div>
-
-              {/* Cerrar sesión */}
-              <div className="p-1.5">
-                <button
-                  onClick={handleLogout}
-                  className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all hover:bg-red-50"
-                >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white transition-all group-hover:border-red-200 group-hover:bg-red-50">
-                    <LogOut size={13} strokeWidth={2} className="text-slate-400 transition-colors group-hover:text-red-500" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-semibold text-slate-600 transition-colors group-hover:text-red-600">
-                      Cerrar sesión
-                    </p>
-                    <p className="text-[10px] text-slate-400">
-                      {user?.email ?? ""}
-                    </p>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        {/*  */}
       </header>
 
-      {dialogOpen && (
+      {/* {dialogOpen && (
         <DialogTranscription
           open={dialogOpen}
           setOpen={setDialogOpen}
@@ -187,7 +109,7 @@ export const Nav = () => {
           onStopListening={stopListening}
           onSubmit={handleSubmit}
         />
-      )}
+      )} */}
     </>
   );
 };

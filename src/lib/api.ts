@@ -14,8 +14,9 @@ export const Api = {
     return response.data;
   },
 
-  post: async (url: string, data: unknown) => {
-    const response = await api.post(url, data);
+  post: async (url: string, data: unknown, token?: string) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const response = await api.post(url, data, config);
     return response.data;
   },
 

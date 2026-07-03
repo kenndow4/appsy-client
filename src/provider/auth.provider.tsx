@@ -119,8 +119,7 @@ export const AuthProvider = ({
       });
 
       setUser(res.user);
-
-      console.log("USER", res.user);
+      
 
       // navegar
       navigate("/");
@@ -187,6 +186,7 @@ export const AuthProvider = ({
 
  const logout = () => {
     Cookies.remove("token");
+    Cookies.remove("boardId");
     setUser(null);
     navigate("/login");
   }
