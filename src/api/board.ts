@@ -1,5 +1,6 @@
 import type { Board } from "@/interfaces/board";
 import { Api } from "@/lib/api";
+import type { BoardContent } from "@/store";
 
 export const getBoardApi = async (boardId: string, token: string): Promise<any> => {
     try {
@@ -40,4 +41,14 @@ export const iaApi = async (boardId: string, msg: string, token: string): Promis
         console.error("Error sending message to IA:", error);
         throw error;
     }   
+}
+
+export const updateBoardApi = async (boardId: string, board: BoardContent, token: string): Promise<any> => {
+    try {
+        const res = await Api.put(`/boards/${boardId}`, board, token);
+        return res;
+    }catch (error) {
+        console.error("Error updating board:", error);
+        throw error;
+    }
 }

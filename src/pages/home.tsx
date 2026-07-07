@@ -5,11 +5,26 @@ import { useBoard } from "@/provider/board.provider";
 import { useEffect } from "react";
 import Cookies from "js-cookie";
 import { SiderBarComponent } from "@/components/sidebar.component";
+import useBoardStore from "@/store";
 
 function Home() {
 
   const { loading, board, getBoard, createBoard, getAllBoard } = useBoard();
   const boardId = Cookies.get("boardId");
+  const { updateBoard, flushPending } = useBoardStore();
+
+  useEffect(() => {
+  const handleBeforeUnload = () => {
+    flushPending();
+  };
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  return () => {
+    flushPending();
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  };
+}, []);
 
   useEffect(() => {
     if (boardId) {
@@ -51,7 +66,16 @@ function Home() {
               <div className="text-gray-500 text-lg">Cargando...</div>
             </div>
           ) : (
-            <Excalidraw initialData={board} />
+            <Excalidraw initialData={board} 
+              onChange={(elements) => {
+    if (!board) return;
+
+    updateBoard(board.id, {
+      ...board,
+      elements,
+    });
+  }}
+            />
           )}
         </main>
 

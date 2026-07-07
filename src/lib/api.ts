@@ -20,8 +20,9 @@ export const Api = {
     return response.data;
   },
 
-  put: async (url: string, data: unknown) => {
-    const response = await api.put(url, data);
+  put: async (url: string, data: unknown, token?: string) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const response = await api.put(url, data, config);
     return response.data;
   },
 
