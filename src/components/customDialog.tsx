@@ -33,9 +33,7 @@ export function CustomDialog({
         <DialogHeader>
           {title && <DialogTitle>{title}</DialogTitle>}
 
-          {description && (
-            <DialogDescription>{description}</DialogDescription>
-          )}
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
         {children}

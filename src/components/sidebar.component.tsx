@@ -6,20 +6,23 @@ import {
   PanelLeft,
   FileText,
   Trash2,
+  Pencil,
   MoreHorizontal,
   Mic,
   LogOut,
   ChevronDown,
 } from "lucide-react";
 import Cookies from "js-cookie";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 
-import { useBoard } from "@/provider/board.provider";
-import { useAuth } from "@/provider/auth.provider";
+import { useBoard } from "@/provider/board.context";
+import { useAuth } from "@/provider/auth.context";
 import { DialogTranscription } from "@/components/dialogTranscription";
 
 const Skeleton = ({ className }: { className?: string }) => (
-  <div className={`animate-pulse rounded-md bg-slate-100 ${className}`} />
+  <div className={`animate-pulse rounded-md bg-slate-100 ${className ?? ""}`} />
 );
 
 const UserAvatar = ({ src, name }: { src?: string; name?: string }) => {
@@ -45,7 +48,15 @@ const UserAvatar = ({ src, name }: { src?: string; name?: string }) => {
 };
 
 export const SiderBarComponent = () => {
-  const { boards, board, getBoard, createBoard} = useBoard();
+  const {
+    boards,
+    board,
+    getBoard,
+    getAllBoard,
+    createBoard,
+    renameBoard,
+    deleteBoard,
+  } = useBoard();
   const { user, userLoading, logout } = useAuth();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -53,11 +64,19 @@ export const SiderBarComponent = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
 
   const userMenuRef = useRef<HTMLDivElement>(null);
+  // Evita guardar dos veces (Enter + blur) o guardar tras cancelar con Esc
+  const renameDoneRef = useRef(false);
 
-  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } =
-    useSpeechRecognition();
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
 
   const activeBoardId = board?.id ?? Cookies.get("boardId");
 
@@ -65,13 +84,22 @@ export const SiderBarComponent = () => {
     if (!boards) return [];
     if (!query.trim()) return boards;
     return boards.filter((b) =>
-      b.title.toLowerCase().includes(query.trim().toLowerCase())
+      b.title.toLowerCase().includes(query.trim().toLowerCase()),
     );
   }, [boards, query]);
 
+  // Carga la lista de pizarras al montar el sidebar
+  useEffect(() => {
+    getAllBoard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node))
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target as Node)
+      )
         setUserMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
@@ -88,21 +116,60 @@ export const SiderBarComponent = () => {
     const newBoard = await createBoard();
     if (newBoard?.id) {
       Cookies.set("boardId", newBoard.id);
-      getBoard(newBoard.id);
+      await getAllBoard();
     }
   };
 
   const handleDeleteBoard = async (e: React.MouseEvent, boardId: string) => {
     e.stopPropagation();
     setOpenMenuId(null);
-    // await deleteBoard?.(boardId);
+
+    try {
+      await deleteBoard(boardId);
+    } catch (error) {
+      console.error("Error al eliminar el board:", error);
+    }
+  };
+
+  const startRename = (
+    e: React.MouseEvent,
+    b: { id: string; title: string },
+  ) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    renameDoneRef.current = false;
+    setEditingId(b.id);
+    setEditingTitle(b.title);
+  };
+
+  const commitRename = async () => {
+    if (renameDoneRef.current || !editingId) return;
+    renameDoneRef.current = true;
+
+    const id = editingId;
+    const title = editingTitle;
+    setEditingId(null);
+
+    try {
+      await renameBoard(id, title);
+    } catch (error) {
+      console.error("Error al renombrar:", error);
+    }
+  };
+
+  const cancelRename = () => {
+    renameDoneRef.current = true;
+    setEditingId(null);
   };
 
   const startListening = () =>
     SpeechRecognition.startListening({ continuous: true, language: "es-ES" });
   const stopListening = () => SpeechRecognition.stopListening();
   const handleTranscriptSubmit = (message: string) => console.log(message);
-  const handleLogout = () => { setUserMenuOpen(false); logout(); };
+  const handleLogout = () => {
+    setUserMenuOpen(false);
+    logout();
+  };
 
   return (
     <>
@@ -121,7 +188,9 @@ export const SiderBarComponent = () => {
           <button
             onClick={() => setCollapsed((c) => !c)}
             className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
-            aria-label={collapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
+            aria-label={
+              collapsed ? "Expandir barra lateral" : "Colapsar barra lateral"
+            }
           >
             {collapsed ? <PanelLeft size={17} /> : <PanelLeftClose size={17} />}
           </button>
@@ -195,7 +264,27 @@ export const SiderBarComponent = () => {
 
                   {!collapsed && (
                     <>
-                      <span className="flex-1 truncate">{b.title}</span>
+                      {editingId === b.id ? (
+                        <input
+                          autoFocus
+                          value={editingTitle}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onBlur={commitRename}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") commitRename();
+                            if (e.key === "Escape") cancelRename();
+                          }}
+                          className="min-w-0 flex-1 rounded border border-[#6965db]/40 bg-white px-1 text-[13px] text-gray-700 outline-none"
+                        />
+                      ) : (
+                        <span
+                          className="flex-1 truncate"
+                          onDoubleClick={(e) => startRename(e, b)}
+                        >
+                          {b.title}
+                        </span>
+                      )}
 
                       <button
                         onClick={(e) => {
@@ -215,6 +304,13 @@ export const SiderBarComponent = () => {
                           className="absolute right-0 top-9 z-10 w-36 overflow-hidden rounded-lg border border-[#e2e8f0] bg-white py-1 shadow-lg"
                         >
                           <button
+                            onClick={(e) => startRename(e, b)}
+                            className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-gray-700 hover:bg-gray-100"
+                          >
+                            <Pencil size={13} />
+                            Renombrar
+                          </button>
+                          <button
                             onClick={(e) => handleDeleteBoard(e, b.id)}
                             className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-red-600 hover:bg-red-50"
                           >
@@ -233,11 +329,13 @@ export const SiderBarComponent = () => {
 
         {/* FOOTER: IA + USUARIO */}
         <div className="border-t border-[#e2e8f0] p-2">
-
           {/* Hablar con IA */}
           {browserSupportsSpeechRecognition && (
             <button
-              onClick={() => setDialogOpen(true)}
+              onClick={() => {
+                resetTranscript();
+                setDialogOpen(true);
+              }}
               className={`mb-1 flex items-center gap-2 rounded-lg border border-[#e2e8f0] bg-white transition-all hover:border-violet-200 hover:bg-violet-50 ${
                 collapsed ? "h-9 w-9 justify-center" : "h-9 w-full px-2.5"
               }`}
@@ -256,7 +354,9 @@ export const SiderBarComponent = () => {
           {/* Usuario */}
           <div className="relative" ref={userMenuRef}>
             {userLoading ? (
-              <div className={`flex items-center gap-2 px-1 ${collapsed ? "justify-center" : ""}`}>
+              <div
+                className={`flex items-center gap-2 px-1 ${collapsed ? "justify-center" : ""}`}
+              >
                 <Skeleton className="h-7 w-7 rounded-full" />
                 {!collapsed && (
                   <>
@@ -296,7 +396,10 @@ export const SiderBarComponent = () => {
             {userMenuOpen && !userLoading && (
               <div
                 className="absolute bottom-[calc(100%+8px)] left-0 z-50 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white"
-                style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.05)" }}
+                style={{
+                  boxShadow:
+                    "0 8px 24px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.05)",
+                }}
               >
                 <div className="border-b border-slate-100 bg-slate-50 px-4 py-3.5">
                   <div className="flex items-center gap-3">
@@ -324,7 +427,11 @@ export const SiderBarComponent = () => {
                     className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all hover:bg-red-50"
                   >
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white transition-all group-hover:border-red-200 group-hover:bg-red-50">
-                      <LogOut size={13} strokeWidth={2} className="text-slate-400 transition-colors group-hover:text-red-500" />
+                      <LogOut
+                        size={13}
+                        strokeWidth={2}
+                        className="text-slate-400 transition-colors group-hover:text-red-500"
+                      />
                     </div>
                     <div>
                       <p className="text-[12px] font-semibold text-slate-600 transition-colors group-hover:text-red-600">

@@ -5,12 +5,13 @@ import { updateBoardApi } from "./api/board";
 import type { OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 
 export interface BoardContent {
-   elements: readonly OrderedExcalidrawElement[];
+  elements: readonly OrderedExcalidrawElement[];
 }
 
 interface BoardStore {
   updateBoard: (boardId: string, board: BoardContent) => void;
   flushPending: () => void;
+  discardBoard: (boardId: string) => void;
 }
 
 const debouncedUpdate = debounce(
@@ -26,21 +27,22 @@ const debouncedUpdate = debounce(
       console.error("Error al guardar:", error);
     }
   },
-  3000
+  3000,
 );
 
 const useBoardStore = create<BoardStore>(() => ({
   updateBoard: (boardId, board) => {
-    localStorage.setItem(
-      `board-${boardId}`,
-      JSON.stringify(board)
-    );
-
+    localStorage.setItem(`board-${boardId}`, JSON.stringify(board));
     debouncedUpdate(boardId, board);
   },
 
   flushPending: () => {
     debouncedUpdate.flush();
+  },
+
+  discardBoard: (boardId) => {
+    debouncedUpdate.cancel();
+    localStorage.removeItem(`board-${boardId}`);
   },
 }));
 

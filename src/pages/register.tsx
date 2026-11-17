@@ -1,6 +1,14 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock, Mail, User, UserPlus, ShieldCheck } from "lucide-react";
-import { useAuth } from "@/provider/auth.provider";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User,
+  UserPlus,
+  ShieldCheck,
+} from "lucide-react";
+import { useAuth } from "@/provider/auth.context";
 import { PromoPanel } from "@/components/promoPanel";
 
 export const RegisterPage = () => {
@@ -21,10 +29,30 @@ export const RegisterPage = () => {
   };
 
   const strengthMap = [
-    { width: "25%", color: "bg-red-400",    label: "Débil",   labelColor: "text-red-500" },
-    { width: "50%", color: "bg-amber-400",  label: "Regular", labelColor: "text-amber-500" },
-    { width: "75%", color: "bg-violet-500", label: "Buena",   labelColor: "text-violet-600" },
-    { width: "100%",color: "bg-green-500",  label: "Fuerte",  labelColor: "text-green-600" },
+    {
+      width: "25%",
+      color: "bg-red-400",
+      label: "Débil",
+      labelColor: "text-red-500",
+    },
+    {
+      width: "50%",
+      color: "bg-amber-400",
+      label: "Regular",
+      labelColor: "text-amber-500",
+    },
+    {
+      width: "75%",
+      color: "bg-violet-500",
+      label: "Buena",
+      labelColor: "text-violet-600",
+    },
+    {
+      width: "100%",
+      color: "bg-green-500",
+      label: "Fuerte",
+      labelColor: "text-green-600",
+    },
   ];
 
   const strength = password ? strengthMap[getStrength(password) - 1] : null;
@@ -39,17 +67,17 @@ export const RegisterPage = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
-
       {/* ── Formulario ── */}
       <div className="flex w-full flex-col items-center justify-center overflow-y-auto px-6 py-10 lg:w-[54%]">
         <div className="w-full max-w-sm">
-
           {/* Logo */}
           <div className="mb-6 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-600">
               <span className="text-xs text-white">✏️</span>
             </div>
-            <span className="text-[14px] font-extrabold text-slate-800">AppsySketra</span>
+            <span className="text-[14px] font-extrabold text-slate-800">
+              AppsySketra
+            </span>
             <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] text-slate-400">
               canvas
             </span>
@@ -65,9 +93,14 @@ export const RegisterPage = () => {
           {/* Nombre + Apellido */}
           <div className="mb-4 flex gap-2">
             <div className="flex-1">
-              <label className="mb-1.5 block text-[12px] font-semibold text-slate-600">Nombre</label>
+              <label className="mb-1.5 block text-[12px] font-semibold text-slate-600">
+                Nombre
+              </label>
               <div className="relative">
-                <User size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <User
+                  size={13}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
                 <input
                   type="text"
                   value={name}
@@ -78,7 +111,9 @@ export const RegisterPage = () => {
               </div>
             </div>
             <div className="flex-1">
-              <label className="mb-1.5 block text-[12px] font-semibold text-slate-600">Apellido</label>
+              <label className="mb-1.5 block text-[12px] font-semibold text-slate-600">
+                Apellido
+              </label>
               <input
                 type="text"
                 value={lastName}
@@ -94,7 +129,10 @@ export const RegisterPage = () => {
             Correo electrónico
           </label>
           <div className="relative mb-4">
-            <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Mail
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type="email"
               value={email}
@@ -109,7 +147,10 @@ export const RegisterPage = () => {
             Contraseña
           </label>
           <div className="relative mb-1.5">
-            <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Lock
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type={showPw ? "text" : "password"}
               placeholder="Mín. 8 caracteres"
@@ -135,7 +176,9 @@ export const RegisterPage = () => {
                   style={{ width: strength.width }}
                 />
               </div>
-              <span className={`mt-1 block text-[11px] font-semibold ${strength.labelColor}`}>
+              <span
+                className={`mt-1 block text-[11px] font-semibold ${strength.labelColor}`}
+              >
                 {strength.label}
               </span>
             </div>
@@ -146,7 +189,10 @@ export const RegisterPage = () => {
             Confirmar contraseña
           </label>
           <div className="relative mb-5">
-            <ShieldCheck size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <ShieldCheck
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type="password"
               placeholder="Repite tu contraseña"
@@ -172,17 +218,18 @@ export const RegisterPage = () => {
 
           <p className="text-center text-[12px] text-slate-400">
             ¿Ya tienes cuenta?{" "}
-            <a href="/login" className="font-bold text-violet-600 hover:underline">
+            <a
+              href="/login"
+              className="font-bold text-violet-600 hover:underline"
+            >
               Inicia sesión
             </a>
           </p>
-
         </div>
       </div>
 
       {/* ── Panel promo ── */}
       <PromoPanel />
-
     </div>
   );
 };

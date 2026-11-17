@@ -1,9 +1,9 @@
-import React, { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { Dialog, DialogContent } from "@/component/ui/dialog";
+import React, { useState, type Dispatch, type SetStateAction } from "react";
+import { Dialog, DialogContent } from "./dialog";
 import { Mic, Square, Sparkles, Loader2 } from "lucide-react";
 import { iaApi } from "@/api/board";
 import Cookies from "js-cookie";
-import { useBoard } from "@/provider/board.provider";
+import { useBoard } from "@/provider/board.context";
 
 interface DialogTranscriptionProps {
   open: boolean;
@@ -27,40 +27,54 @@ export const DialogTranscription: React.FC<DialogTranscriptionProps> = ({
   onSubmit,
 }) => {
   const [message, setMessage] = useState("");
+  const [prevTranscript, setPrevTranscript] = useState(transcript);
   const [isSending, setIsSending] = useState(false);
-  const {getBoard} = useBoard();  
+  const { getBoard } = useBoard();
 
-  useEffect(() => {
+  if (transcript !== prevTranscript) {
+    setPrevTranscript(transcript);
     setMessage(transcript);
-  }, [transcript]);
+  }
 
   const handleSend = async () => {
     const token: string = Cookies.get("token") || "";
     const boardId: string = Cookies.get("boardId") || "";
     if (!message.trim() || !token || !boardId || isSending) return;
 
+    if (listening) onStopListening(); // para el micrófono al enviar
+
     setIsSending(true);
     try {
       await iaApi(boardId, message, token);
+      onSubmit(message);
       setMessage("");
-      getBoard(boardId); // Refresh the board after sending the message
       resetTranscript();
+      await getBoard(boardId);
+      setOpen(false);
+    } catch (error) {
+      console.error("Error al enviar a la IA:", error);
     } finally {
       setIsSending(false);
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={() => !isSending && setOpen(!open)}>
-      <DialogContent className="max-w-[520px] rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+  const handleOpenChange = (next: boolean) => {
+    if (!next && listening) onStopListening();
+    setOpen(next);
+  };
 
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-[520px] rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
         {/* Header */}
         <div className="mb-4">
           <h2 className="text-[15px] font-bold tracking-tight text-slate-800">
             Describe tu aplicación
           </h2>
           <p className="mt-0.5 text-[11px] text-slate-400">
-            {isSending ? "La IA está construyendo tu aplicación" : "Habla o escribe lo que quieres construir"}
+            {isSending
+              ? "La IA está construyendo tu aplicación"
+              : "Habla o escribe lo que quieres construir"}
           </p>
         </div>
 
@@ -70,17 +84,26 @@ export const DialogTranscription: React.FC<DialogTranscriptionProps> = ({
             <div className="relative flex h-11 w-11 items-center justify-center">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-20" />
               <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-white shadow-md shadow-violet-200">
-                <Sparkles size={16} className="animate-pulse" strokeWidth={2.5} />
+                <Sparkles
+                  size={16}
+                  className="animate-pulse"
+                  strokeWidth={2.5}
+                />
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <Loader2 size={12} className="animate-spin text-violet-500" strokeWidth={2.5} />
+              <Loader2
+                size={12}
+                className="animate-spin text-violet-500"
+                strokeWidth={2.5}
+              />
               <span className="text-[12px] font-semibold text-violet-600">
                 Generando tu aplicación...
               </span>
             </div>
             <p className="max-w-[300px] text-center text-[11px] leading-relaxed text-slate-400">
-              Esto puede tardar unos segundos, estamos armando la estructura y los componentes.
+              Esto puede tardar unos segundos, estamos armando la estructura y
+              los componentes.
             </p>
           </div>
         ) : (
@@ -97,7 +120,6 @@ export const DialogTranscription: React.FC<DialogTranscriptionProps> = ({
 
         {/* Footer */}
         <div className="mt-3 flex items-center justify-between gap-2">
-
           <div className="flex items-center gap-2">
             {/* Mic */}
             <button
@@ -105,20 +127,25 @@ export const DialogTranscription: React.FC<DialogTranscriptionProps> = ({
               disabled={isSending}
               aria-label={listening ? "Detener grabación" : "Activar micrófono"}
               className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-all disabled:cursor-not-allowed disabled:opacity-40
-                ${listening
-                  ? "border-amber-300 bg-amber-50 text-amber-600 ring-2 ring-amber-100"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                ${
+                  listening
+                    ? "border-amber-300 bg-amber-50 text-amber-600 ring-2 ring-amber-100"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"
                 }`}
             >
-              {listening
-                ? <Square size={13} strokeWidth={2.5} />
-                : <Mic size={13} strokeWidth={2.5} />
-              }
+              {listening ? (
+                <Square size={13} strokeWidth={2.5} />
+              ) : (
+                <Mic size={13} strokeWidth={2.5} />
+              )}
             </button>
 
             {/* Limpiar */}
             <button
-              onClick={() => { resetTranscript(); setMessage(""); }}
+              onClick={() => {
+                resetTranscript();
+                setMessage("");
+              }}
               disabled={isSending}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-500 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -134,7 +161,13 @@ export const DialogTranscription: React.FC<DialogTranscriptionProps> = ({
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
               </span>
             )}
-            <span className={`text-[11px] ${listening && !isSending ? "font-semibold text-amber-600" : "text-slate-400"}`}>
+            <span
+              className={`text-[11px] ${
+                listening && !isSending
+                  ? "font-semibold text-amber-600"
+                  : "text-slate-400"
+              }`}
+            >
               {isSending ? "" : listening ? "Escuchando..." : "Escribe o habla"}
             </span>
           </div>
@@ -145,10 +178,11 @@ export const DialogTranscription: React.FC<DialogTranscriptionProps> = ({
             disabled={!message.trim() || isSending}
             className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-[13px] font-bold text-white shadow-md shadow-violet-200 transition-all hover:bg-violet-700 hover:shadow-violet-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
-            {isSending && <Loader2 size={13} className="animate-spin" strokeWidth={2.5} />}
+            {isSending && (
+              <Loader2 size={13} className="animate-spin" strokeWidth={2.5} />
+            )}
             {isSending ? "Generando..." : "Enviar"}
           </button>
-
         </div>
       </DialogContent>
     </Dialog>

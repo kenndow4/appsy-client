@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail, LogIn } from "lucide-react";
-import { useAuth } from "@/provider/auth.provider";
+import { useAuth } from "@/provider/auth.context";
 import { PromoPanel } from "@/components/promoPanel";
 
 export const LoginPage = () => {
@@ -15,17 +15,17 @@ export const LoginPage = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
-
       {/* ── Formulario ── */}
       <div className="flex w-full flex-col items-center justify-center overflow-y-auto px-6 py-10 lg:w-[54%]">
         <div className="w-full max-w-sm">
-
           {/* Logo */}
           <div className="mb-8 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-600">
               <span className="text-xs text-white">✏️</span>
             </div>
-            <span className="text-[14px] font-extrabold text-slate-800">Appsy Sketra</span>
+            <span className="text-[14px] font-extrabold text-slate-800">
+              Appsy Sketra
+            </span>
             <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] text-slate-400">
               canvas
             </span>
@@ -43,7 +43,10 @@ export const LoginPage = () => {
             Correo electrónico
           </label>
           <div className="relative mb-4">
-            <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Mail
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type="email"
               value={email}
@@ -58,7 +61,10 @@ export const LoginPage = () => {
             Contraseña
           </label>
           <div className="relative mb-6">
-            <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Lock
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type={showPw ? "text" : "password"}
               placeholder="••••••••"
@@ -93,17 +99,18 @@ export const LoginPage = () => {
 
           <p className="text-center text-[12px] text-slate-400">
             ¿No tienes cuenta?{" "}
-            <a href="/register" className="font-bold text-violet-600 hover:underline">
+            <a
+              href="/register"
+              className="font-bold text-violet-600 hover:underline"
+            >
               Regístrate gratis
             </a>
           </p>
-
         </div>
       </div>
 
       {/* ── Panel promo ── */}
       <PromoPanel />
-
     </div>
   );
 };
